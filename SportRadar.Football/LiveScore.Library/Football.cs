@@ -1,6 +1,9 @@
-﻿using LiveScore.Library.Abstracts;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Runtime.CompilerServices;
+using LiveScore.Library.Abstracts;
 using LiveScore.Library.Models;
 using System.Text;
+using LiveScore.Library.Utility;
 
 namespace LiveScore.Library
 {
@@ -21,6 +24,7 @@ namespace LiveScore.Library
 
         public Tuple<bool, Scores> StartGame(Game game)
         {
+            if (!Valid(game)) return new Tuple<bool, Scores>(false, null);
             var startTime = TimeOnly.FromDateTime(DateTime.Now);
             var endTime = startTime.AddMinutes(90);
             var liveGames = _internalScoreBoard.Count;
@@ -50,6 +54,14 @@ namespace LiveScore.Library
 
             return _internalScoreBoard.Count == gameId ? (new Tuple<bool, Scores>(true, result)) : (new Tuple<bool, Scores>(false, null));
         }
+
+        private static bool Valid(Game game)
+        {
+            return game.AwayTeam.TeamName.IsValidTeam() && game.AwayTeam.Goal.IsValidGoal();
+        }
+
+
+
         #endregion
     }
 }
