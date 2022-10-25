@@ -15,5 +15,4 @@ public interface IInternalModel
 
     bool IsLive { get; set; }
     StringBuilder? Message { get; set; }
-
 }

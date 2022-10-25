@@ -12,5 +12,4 @@ internal class InternalScoreModel : IInternalModel
     public TimeOnly LastUpdatedOn { get; set; }
     public bool IsLive { get; set; }
     public StringBuilder? Message { get; set; }
-
 }
