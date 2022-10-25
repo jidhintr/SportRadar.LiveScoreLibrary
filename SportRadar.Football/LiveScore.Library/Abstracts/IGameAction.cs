@@ -19,5 +19,5 @@ public interface IGameAction
     /// <returns>Status of update operation and updated score</returns>
     (bool IsUpdated, Scores Score) UpdateScore(Game game); // by game Id as well ?? , client has overhead to save id 
     // Summary AllSummary(); // sort action ??
-    // FinishGame(Game game);
+    bool FinishGame(Game game);
 }

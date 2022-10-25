@@ -164,4 +164,39 @@ public class LiveScoreTests
     }
 
     #endregion
+
+    #region FinishGame
+    [Test]
+    public void FinishGame_NoLiveGames_ExpectFailure()
+    {
+        var result = _football.FinishGame(_game);
+        IsFalse(result);
+    }
+
+    [Test]
+    public void FinishGame_AddOneValidGame_RemoveSame()
+    {
+        StartGame_ValidParams_ReturnsTrue(); // reuse existing unit-test for nested functions 
+        var result = _football.FinishGame(_game);
+        IsTrue(result);
+    }
+
+
+    [Test]
+    public void FinishGame_AddMultipleGame_RemoveMultiple()
+    {
+        StartGame_ValidParams_MultipleGame(); // reuse existing unit-test for nested functions 
+        var result = _football.FinishGame(_game);
+        IsTrue(result);
+
+        var result2 = _football.FinishGame(_game2);
+        IsTrue(result2);
+
+        var result3 = _football.FinishGame(_game3);
+        IsTrue(result3);
+
+    }
+
+
+    #endregion
 }
