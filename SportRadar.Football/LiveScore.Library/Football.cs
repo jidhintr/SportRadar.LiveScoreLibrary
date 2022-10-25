@@ -23,7 +23,7 @@ public class Football : IGameAction
     public (bool IsStarted, Scores Score) StartGame(Game game)
     {
         try
-        {
+        { 
             if (!game.IsValid()) return new ValueTuple<bool, Scores>(false, null);
             var startTime = TimeOnly.FromDateTime(DateTime.Now);
             var endTime = startTime.AddMinutes(90);
@@ -88,6 +88,19 @@ public class Football : IGameAction
             // log ex
             throw;
         }
+    }
+
+  public List<Game> AllSummary()
+    {
+        var lis = (from game in _internalScoreBoard let g1 = game.AwayTeam.Goal
+            let g2 = game.HomeTeam.Goal 
+            select new { TotalScore = g1 + g2, StartTime = game.StartTime,
+                Id = game.GameId, Game = new Game(game.HomeTeam, game.AwayTeam) });
+
+        var result = lis.OrderByDescending( a => a.TotalScore)
+            .ThenByDescending(b => b.StartTime)
+            .Select(a => new Game(a.Game.HomeTeam, a.Game.AwayTeam));
+        return result.ToList();
     }
 
     public bool FinishGame(Game game)

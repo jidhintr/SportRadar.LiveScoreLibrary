@@ -18,6 +18,17 @@ public interface IGameAction
     /// <param name="game">Expect the game 'record' with both team's absolute scores</param>
     /// <returns>Status of update operation and updated score</returns>
     (bool IsUpdated, Scores Score) UpdateScore(Game game); // by game Id as well ?? , client has overhead to save id 
-    // Summary AllSummary(); // sort action ??
+    
+    /// <summary>
+    /// Get list of all live games 
+    /// </summary>
+    /// <returns>List of all games in order</returns>
+    List<Game> AllSummary(); // sort action ??
+    
+    /// <summary>
+    /// End the live game if exists
+    /// </summary>
+    /// <param name="game">Live game's details</param>
+    /// <returns>Boolean, game stopped or not</returns>
     bool FinishGame(Game game);
 }

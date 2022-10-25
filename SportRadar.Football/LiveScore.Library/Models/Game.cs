@@ -1,3 +1,6 @@
 ﻿namespace LiveScore.Library.Models;
 
-public record struct Game(Team HomeTeam, Team AwayTeam);
+public readonly record struct Game(Team HomeTeam, Team AwayTeam)
+{
+    public override string ToString() => $"{HomeTeam} - {AwayTeam}";
+}
