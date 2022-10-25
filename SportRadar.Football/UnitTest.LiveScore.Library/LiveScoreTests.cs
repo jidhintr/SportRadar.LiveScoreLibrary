@@ -53,6 +53,7 @@ namespace UnitTest.LiveScore.Library
 
         }
 
+        #region Start_Test
         [Test]
         public void StartGame_ValidParams_ReturnsTrue()
         {
@@ -85,15 +86,15 @@ namespace UnitTest.LiveScore.Library
 
         }
 
-        [Test] 
+        [Test]
         public void StartGame_ValidParams_MultipleGame_ScoreCheck()
         {
             var result = _football.StartGame(game);
             IsTrue(result.Item2.IsLive);
             GreaterOrEqual(result.Item2.GameId, 1);
-            GreaterOrEqual(result.Item2.Score.AwayTeam.Goal , 0);
+            GreaterOrEqual(result.Item2.Score.AwayTeam.Goal, 0);
             AreEqual(game.HomeTeam, result.Item2.Score.HomeTeam);
-            
+
         }
 
 
@@ -102,10 +103,70 @@ namespace UnitTest.LiveScore.Library
         {
             var result = _football.StartGame(game4);
             IsFalse(result.Item1);
-           
+
+        }
+
+        #endregion
+
+        #region UpdateGAmeTests
+
+
+        [Test]
+        public void UpdateScore_AfterAddingSingleGameWithValidParams()
+        {
+            _football.StartGame(game3);
+            game3 = new Game(new Team("Liverpool", 0), new Team("Chelsea", 1));
+            var result = _football.UpdateScore(game3);
+            IsTrue(result.Item1);
         }
 
 
+        [Test]
+        public void UpdateScore_SingleGameWithoutStartGame_ValidParams()
+        {
+            game3 = new Game(new Team("Liverpool", 0), new Team("Chelsea", 1));
+            var result = _football.UpdateScore(game3);
+            IsFalse(result.Item1);
+        }
+
+
+        [Test]
+        public void UpdateScore_AfterAddingMultipleGameWithValidParams()
+        {
+            _football.StartGame(game);
+            _football.StartGame(game2);
+
+            // update game2 
+            var homeTeamUpdated = new Team("Manchester United", 2);
+            var awayTeamUpdated = new Team("AC Milan", 0);
+            var updatedGame = new Game(homeTeamUpdated, awayTeamUpdated);
+            var updatedGameResult = _football.UpdateScore(updatedGame);
+
+
+            // update game 1
+            var homeTeamUpdated2 = new Team("Real Madrid", 1);
+            var awayTeamUpdated2 = new Team("FC Barcelona", 0);
+            var updatedGame2 = new Game(homeTeamUpdated2, awayTeamUpdated2);
+            var updatedGameResult2 = _football.UpdateScore(updatedGame2);
+
+
+            IsTrue(updatedGameResult.Item1);
+            IsTrue(updatedGameResult2.Item1);
+
+            IsTrue(updatedGameResult.Item2.IsLive);
+            IsTrue(updatedGameResult2.Item2.IsLive);
+
+            IsTrue(updatedGameResult.Item2.IsLive);
+
+            // validate scores passed 
+            AreEqual(updatedGameResult.Item2.Score.HomeTeam.Goal, 2);
+            AreEqual(updatedGameResult2.Item2.Score.HomeTeam.Goal, homeTeamUpdated2.Goal);
+
+            AreEqual(updatedGameResult.Item2.Score.HomeTeam, homeTeamUpdated);
+            AreEqual(updatedGameResult2.Item2.Score.AwayTeam, awayTeamUpdated2);
+
+        } 
+        #endregion
 
     }
 }

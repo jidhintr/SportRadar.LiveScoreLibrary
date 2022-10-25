@@ -24,7 +24,7 @@ namespace LiveScore.Library
 
         public Tuple<bool, Scores> StartGame(Game game)
         {
-            if (!Valid(game)) return new Tuple<bool, Scores>(false, null);
+            if (!game.IsValid()) return new Tuple<bool, Scores>(false, null);
             var startTime = TimeOnly.FromDateTime(DateTime.Now);
             var endTime = startTime.AddMinutes(90);
             var liveGames = _internalScoreBoard.Count;
@@ -55,13 +55,29 @@ namespace LiveScore.Library
             return _internalScoreBoard.Count == gameId ? (new Tuple<bool, Scores>(true, result)) : (new Tuple<bool, Scores>(false, null));
         }
 
-        private static bool Valid(Game game)
+        public Tuple<bool, Scores> UpdateScore(Game game)
         {
-            return game.AwayTeam.TeamName.IsValidTeam() && game.AwayTeam.Goal.IsValidGoal();
+            var playingTeam = _internalScoreBoard.FirstOrDefault(match => match.IsLive &&
+                            match.AwayTeam.TeamName.Equals(game.AwayTeam.TeamName, StringComparison.OrdinalIgnoreCase) &&
+                            match.HomeTeam.TeamName.Equals(game.HomeTeam.TeamName, StringComparison.OrdinalIgnoreCase));
+
+            if (playingTeam == null) return new(false, new Scores());
+            playingTeam.AwayTeam = game.AwayTeam;
+            playingTeam.HomeTeam = game.HomeTeam;
+            playingTeam.Message?.Append(Environment.NewLine).Append($"Goal scored at {DateTime.Now}");
+
+            var updatedScore = new Scores()
+            {
+                GameId = playingTeam.GameId,
+                IsLive = playingTeam.IsLive,
+                Score = new Game(playingTeam.HomeTeam, playingTeam.AwayTeam),
+                Message = playingTeam.Message?.ToString()
+            };
+
+
+            return new(true, updatedScore);
         }
-
-
-
+        
         #endregion
     }
 }
