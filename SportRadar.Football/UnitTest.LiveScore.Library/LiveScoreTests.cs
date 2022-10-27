@@ -1,5 +1,8 @@
+using System.Diagnostics;
 using LiveScore.Library;
+using LiveScore.Library.Events;
 using LiveScore.Library.Models;
+using NUnit.Framework.Internal;
 using static NUnit.Framework.Assert;
 
 namespace UnitTest.LiveScore.Library;
@@ -272,4 +275,55 @@ public class LiveScoreTests
     }
 
     #endregion
+
+    [Test]
+    public void OnGameStatusChangeProcessCompleted_StartGameEventWithValidGame_ExpectedTrue()
+    {
+        _football.OnGameStatusChangeProcessCompleted += IsGameStatusChanged;
+        _football.StartGame(_game);
+
+    }
+
+    [Test]
+    public void OnGameStatusChangeProcessCompleted_StartGameEventWithInValidGame_ExpectedFailure()
+    {
+        _football.OnGameStatusChangeProcessCompleted += IsGameStatusChanged2;
+        _football.StartGame(_game4);
+    }
+
+
+    [Test]
+    public void OnScoreChangeProcessCompleted_StartGameWithUpdateEventWithValidGame()
+    {
+
+        _eventScore = new Scores();
+        _football.OnLiveScoreChangeProcessCompleted += LiveScoreChanged;
+        _football.StartGame(_game);
+        _football.StartGame(_game2);
+
+        // update game2 
+        var homeTeamUpdated = new Team("Manchester United", 2);
+        var awayTeamUpdated = new Team("AC Milan", 0);
+        var updatedGame = new Game(homeTeamUpdated, awayTeamUpdated);
+        IsNotNull(_eventScore);
+        var updatedGameResult = _football.UpdateScore(updatedGame);
+        AreEqual(updatedGameResult.Score, _eventScore);
+        AreEqual(homeTeamUpdated.Goal, _eventScore.Game.HomeTeam.Goal);
+        // update game 1
+        var homeTeamUpdated2 = new Team("Real Madrid", 1);
+        var awayTeamUpdated2 = new Team("FC Barcelona", 0);
+        var updatedGame2 = new Game(homeTeamUpdated2, awayTeamUpdated2);
+        var updatedGameResult2 = _football.UpdateScore(updatedGame2);
+
+        AreEqual(updatedGameResult2.Score, _eventScore);
+        AreEqual(homeTeamUpdated2.Goal, 1);
+    }
+
+    private Scores _eventScore;
+    private void LiveScoreChanged(object sender, ScoreEventArgs e) => _eventScore = e.UpdatedScore;
+
+
+    private void IsGameStatusChanged(object sender, bool e) => IsTrue(e);
+
+    private void IsGameStatusChanged2(object sender, bool e) => IsFalse(e);
 }

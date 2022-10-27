@@ -1,7 +1,8 @@
-﻿using System.Text;
-using LiveScore.Library.Abstracts;
+﻿using LiveScore.Library.Abstracts;
+using LiveScore.Library.Events;
 using LiveScore.Library.Models;
 using LiveScore.Library.Utility;
+using System.Text;
 
 namespace LiveScore.Library;
 
@@ -10,7 +11,8 @@ public class Football : IGameAction
     #region Props
 
     private readonly List<InternalScoreModel> _internalScoreBoard;
-
+    public event EventHandler<bool> OnGameStatusChangeProcessCompleted;
+    public event EventHandler<ScoreEventArgs> OnLiveScoreChangeProcessCompleted;
     #endregion
 
     public Football()
@@ -23,8 +25,13 @@ public class Football : IGameAction
     public (bool IsStarted, Scores Score) StartGame(Game game)
     {
         try
-        { 
-            if (!game.IsValid()) return new ValueTuple<bool, Scores>(false, null);
+        {
+            if (!game.IsValid())
+            {
+                OnGameStatusChanged(false);
+                return new ValueTuple<bool, Scores>(false, null);
+            }
+
             var startTime = TimeOnly.FromDateTime(DateTime.Now);
             var endTime = startTime.AddMinutes(90);
             var liveGames = _internalScoreBoard.Count;
@@ -52,9 +59,15 @@ public class Football : IGameAction
                 Game = game,
                 Message = score.Message.ToString()
             };
-            return _internalScoreBoard.Count == gameId
-                ? new ValueTuple<bool, Scores>(true, result)
-                : new ValueTuple<bool, Scores>(false, null);
+
+
+            if (_internalScoreBoard.Count == gameId)
+            {
+                OnGameStatusChanged(true);
+                return (true, result);
+            }
+
+            return (false, null);
         }
         catch (Exception)
         {
@@ -69,7 +82,7 @@ public class Football : IGameAction
         {
 
             var playingTeam = IsGameExists(game);
-            if (playingTeam == null) return new ValueTuple<bool, Scores>(false, new Scores());
+            if (playingTeam == null) return (false, new Scores());
             playingTeam.AwayTeam = game.AwayTeam;
             playingTeam.HomeTeam = game.HomeTeam;
             playingTeam.Message?.Append(Environment.NewLine).Append($"Goal scored at {DateTime.Now}");
@@ -81,7 +94,9 @@ public class Football : IGameAction
                 Game = new Game(playingTeam.HomeTeam, playingTeam.AwayTeam),
                 Message = playingTeam.Message?.ToString()
             };
-            return new ValueTuple<bool, Scores>(true, updatedScore);
+
+            ScoreUpdated(new ScoreEventArgs(updatedScore));
+            return (true, updatedScore);
         }
         catch (Exception ex)
         {
@@ -90,14 +105,20 @@ public class Football : IGameAction
         }
     }
 
-  public List<Game> AllSummary()
+    public List<Game> AllSummary()
     {
-        var lis = (from game in _internalScoreBoard let g1 = game.AwayTeam.Goal
-            let g2 = game.HomeTeam.Goal 
-            select new { TotalScore = g1 + g2, StartTime = game.StartTime,
-                Id = game.GameId, Game = new Game(game.HomeTeam, game.AwayTeam) });
+        var lis = (from game in _internalScoreBoard
+                   let g1 = game.AwayTeam.Goal
+                   let g2 = game.HomeTeam.Goal
+                   select new
+                   {
+                       TotalScore = g1 + g2,
+                       StartTime = game.StartTime,
+                       Id = game.GameId,
+                       Game = new Game(game.HomeTeam, game.AwayTeam)
+                   });
 
-        var result = lis.OrderByDescending( a => a.TotalScore)
+        var result = lis.OrderByDescending(a => a.TotalScore)
             .ThenByDescending(b => b.StartTime)
             .Select(a => new Game(a.Game.HomeTeam, a.Game.AwayTeam));
         return result.ToList();
@@ -112,8 +133,10 @@ public class Football : IGameAction
             if (playingGame != null)
             {
                 _internalScoreBoard.Remove(playingGame);
+                OnGameStatusChanged(true);
                 return true;
             }
+            OnGameStatusChanged(false);
             return false;
         }
         catch (Exception ex)
@@ -130,5 +153,15 @@ public class Football : IGameAction
     private InternalScoreModel? IsGameExists(Game game) => _internalScoreBoard.FirstOrDefault(match => match.IsLive &&
                                                            match.AwayTeam.TeamName.Equals(game.AwayTeam.TeamName, StringComparison.OrdinalIgnoreCase)
                                                           && match.HomeTeam.TeamName.Equals(game.HomeTeam.TeamName, StringComparison.OrdinalIgnoreCase));
+
+    protected virtual void OnGameStatusChanged(bool isSuccessful)
+    {
+        OnGameStatusChangeProcessCompleted?.Invoke(this, isSuccessful);
+    }
+
+    protected virtual void ScoreUpdated(ScoreEventArgs args)
+    {
+        OnLiveScoreChangeProcessCompleted?.Invoke(this, args);
+    }
     #endregion
 }
