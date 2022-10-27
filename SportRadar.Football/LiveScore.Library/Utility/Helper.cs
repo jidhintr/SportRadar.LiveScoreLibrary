@@ -8,6 +8,15 @@ public static class Helper
 
     private static bool IsValidGoal(this int goal) => goal is >= 0 and < 100; // Minimum or start goal = 0, as per requirement
                                                                               // Max goal is assumed to be 99
-    public static bool IsValid(this Game game) => game.AwayTeam.TeamName.IsValidTeam() && game.AwayTeam.Goal.IsValidGoal();
+    public static bool IsValidGame(this Game game) => game.AwayTeam.TeamName.IsValidTeam() && game.AwayTeam.Goal.IsValidGoal();
 
+    internal static InternalScoreModel? IsGameLive(this Game game)
+    {
+        return Globals.InternalScoreBoard.FirstOrDefault(match => match.IsLive &&
+                                                                  match.AwayTeam.TeamName.Equals(game.AwayTeam.TeamName,
+                                                                      StringComparison.OrdinalIgnoreCase)
+                                                                  && match.HomeTeam.TeamName.Equals(
+                                                                      game.HomeTeam.TeamName,
+                                                                      StringComparison.OrdinalIgnoreCase));
+    }
 }

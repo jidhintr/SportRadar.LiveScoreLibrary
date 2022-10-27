@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Xml.Linq;
 using LiveScore.Library;
 using LiveScore.Library.Events;
 using LiveScore.Library.Models;
@@ -7,12 +8,13 @@ using static NUnit.Framework.Assert;
 
 namespace UnitTest.LiveScore.Library;
 
-public class LiveScoreTests
+public class LiveGamesTest
 {
     [SetUp]
     public void Setup()
     {
-        _football = new Football();
+        _gameController = new GameController();
+        _liveGames = new LiveGames();
         ConfigureTeam();
     }
 
@@ -45,7 +47,8 @@ public class LiveScoreTests
 
     #region Props
 
-    private Football _football;
+    private GameController _gameController;
+    private LiveGames _liveGames;
     private Game _game;
     private Team _homeTeam;
     private Team _awayTeam;
@@ -70,67 +73,15 @@ public class LiveScoreTests
 
     #endregion
 
-    #region Start_Test
-
-    [Test]
-    public void StartGame_ValidParams_ReturnsTrue()
-    {
-        var result = _football.StartGame(_game);
-        if (result.Item2 != null)
-            IsTrue(result.IsStarted);
-    }
-
-    [Test]
-    [TestCase]
-    public void StartGame_ValidParams_SingleGame_NullResponse()
-    {
-        var result = _football.StartGame(_game);
-        if (result.Item2 == null)
-            IsFalse(result.IsStarted);
-    }
-
-    [Test]
-    [TestCase]
-    public void StartGame_ValidParams_MultipleGame()
-    {
-        var result = _football.StartGame(_game);
-        IsTrue(result.IsStarted);
-
-        var result2 = _football.StartGame(_game2);
-        IsTrue(result2.IsStarted);
-
-        var result3 = _football.StartGame(_game3);
-        IsTrue(result3.IsStarted);
-    }
-
-    [Test]
-    public void StartGame_ValidParams_MultipleGame_ScoreCheck()
-    {
-        var result = _football.StartGame(_game);
-        IsTrue(result.Score.IsLive);
-        GreaterOrEqual(result.Score.GameId, 1);
-        GreaterOrEqual(result.Score.Game.AwayTeam.Goal, 0);
-        AreEqual(_game.HomeTeam, result.Score.Game.HomeTeam);
-    }
-
-
-    [Test]
-    public void StartGame_ValidParams_MultipleGame_ScoreCheck_Invalidate()
-    {
-        var result = _football.StartGame(_game4);
-        IsFalse(result.IsStarted);
-    }
-
-    #endregion
-
+ 
     #region UpdateGAmeTests
 
     [Test]
     public void UpdateScore_AfterAddingSingleGameWithValidParams()
     {
-        _football.StartGame(_game3);
+        _gameController.StartGame(_game3);
         _game3 = new Game(new Team("Liverpool", 0), new Team("Chelsea", 1));
-        var result = _football.UpdateScore(_game3);
+        var result = _liveGames.UpdateScore(_game3);
         IsTrue(result.IsUpdated);
     }
 
@@ -139,7 +90,7 @@ public class LiveScoreTests
     public void UpdateScore_SingleGameWithoutStartGame_ValidParams()
     {
         _game3 = new Game(new Team("Liverpool", 0), new Team("Chelsea", 1));
-        var result = _football.UpdateScore(_game3);
+        var result = _liveGames.UpdateScore(_game3);
         IsFalse(result.IsUpdated);
     }
 
@@ -147,21 +98,21 @@ public class LiveScoreTests
     [Test]
     public void UpdateScore_AfterAddingMultipleGameWithValidParams()
     {
-        _football.StartGame(_game);
-        _football.StartGame(_game2);
+        _gameController.StartGame(_game);
+        _gameController.StartGame(_game2);
 
         // update game2 
         var homeTeamUpdated = new Team("Manchester United", 2);
         var awayTeamUpdated = new Team("AC Milan", 0);
         var updatedGame = new Game(homeTeamUpdated, awayTeamUpdated);
-        var updatedGameResult = _football.UpdateScore(updatedGame);
+        var updatedGameResult = _liveGames.UpdateScore(updatedGame);
 
 
         // update game 1
         var homeTeamUpdated2 = new Team("Real Madrid", 1);
         var awayTeamUpdated2 = new Team("FC Barcelona", 0);
         var updatedGame2 = new Game(homeTeamUpdated2, awayTeamUpdated2);
-        var updatedGameResult2 = _football.UpdateScore(updatedGame2);
+        var updatedGameResult2 = _liveGames.UpdateScore(updatedGame2);
 
 
         IsTrue(updatedGameResult.IsUpdated);
@@ -171,97 +122,60 @@ public class LiveScoreTests
         IsTrue(updatedGameResult2.Score.IsLive);
 
         IsTrue(updatedGameResult.Score.IsLive);
+        That(updatedGameResult.Score.Game.HomeTeam.Goal, Is.EqualTo(2));
+        That(updatedGameResult2.Score.Game.HomeTeam.Goal, Is.EqualTo(1));
 
-        // validate scores passed 
-        AreEqual(updatedGameResult.Score.Game.HomeTeam.Goal, 2);
-        AreEqual(updatedGameResult2.Score.Game.HomeTeam.Goal, homeTeamUpdated2.Goal);
-
-        AreEqual(updatedGameResult.Score.Game.HomeTeam, homeTeamUpdated);
-        AreEqual(updatedGameResult2.Score.Game.AwayTeam, awayTeamUpdated2);
+        AreEqual(homeTeamUpdated, updatedGameResult.Score.Game.HomeTeam);
+        AreEqual(awayTeamUpdated2, updatedGameResult2.Score.Game.AwayTeam);
     }
 
 
 
     #endregion
-
-    #region FinishGame
-    [Test]
-    public void FinishGame_NoLiveGames_ExpectFailure()
-    {
-        var result = _football.FinishGame(_game);
-        IsFalse(result);
-    }
-
-    [Test]
-    public void FinishGame_AddOneValidGame_RemoveSame()
-    {
-        StartGame_ValidParams_ReturnsTrue(); // reuse existing unit-test for nested functions 
-        var result = _football.FinishGame(_game);
-        IsTrue(result);
-    }
-
-
-    [Test]
-    public void FinishGame_AddMultipleGame_RemoveMultiple()
-    {
-        StartGame_ValidParams_MultipleGame(); // reuse existing unit-test for nested functions 
-        var result = _football.FinishGame(_game);
-        IsTrue(result);
-
-        var result2 = _football.FinishGame(_game2);
-        IsTrue(result2);
-
-        var result3 = _football.FinishGame(_game3);
-        IsTrue(result3);
-
-    }
-
-    #endregion
-
 
     #region SummaryTests
 
     [Test]
     public void Summary_AddMultipleGame_Sorted()
     {
-        var gameStat = _football.StartGame(_game);
+        var gameStat = _gameController.StartGame(_game);
         Assert.IsTrue(gameStat.IsStarted);
         //Thread.Sleep(31000);
-        _football.StartGame(_game2);
+        _gameController.StartGame(_game2);
         //Thread.Sleep(59000);
-        _football.StartGame(_game3);
+        _gameController.StartGame(_game3);
         //Thread.Sleep(21000);
-        _football.StartGame(_game5);
+        _gameController.StartGame(_game5);
         //Thread.Sleep(39000);
-        _football.StartGame(_game6);
+        _gameController.StartGame(_game6);
 
 
         var homeTeamUpdated = new Team("Manchester United", 2);
         var awayTeamUpdated = new Team("AC Milan", 0);
         var updatedGame = new Game(homeTeamUpdated, awayTeamUpdated);
-        var updatedGameResult = _football.UpdateScore(updatedGame);
+        var updatedGameResult = _liveGames.UpdateScore(updatedGame);
 
         var homeTeamUpdated2 = new Team("Real Madrid", 1);
         var awayTeamUpdated2 = new Team("FC Barcelona", 2);
         var updatedGame2 = new Game(homeTeamUpdated2, awayTeamUpdated2);
-        var updatedGameResult2 = _football.UpdateScore(updatedGame2);
+        var updatedGameResult2 = _liveGames.UpdateScore(updatedGame2);
 
         var homeTeamUpdated3 = new Team("Liverpool", 1);
         var awayTeamUpdated3 = new Team("Chelsea", 1);
         var updatedGame3 = new Game(homeTeamUpdated3, awayTeamUpdated3);
-        var updatedGameResult3 = _football.UpdateScore(updatedGame3);
+        var updatedGameResult3 = _liveGames.UpdateScore(updatedGame3);
 
         var homeTeamUpdated5 = new Team("Spain", 1);
         var awayTeamUpdated5 = new Team("Portugal", 2);
         var updatedGame5 = new Game(homeTeamUpdated5, awayTeamUpdated5);
-        var updatedGameResult5 = _football.UpdateScore(updatedGame5);
+        var updatedGameResult5 = _liveGames.UpdateScore(updatedGame5);
 
         var homeTeamUpdated6 = new Team("Poland", 2);
         var awayTeamUpdated6 = new Team("Germany", 2);
         var updatedGame6 = new Game(homeTeamUpdated6, awayTeamUpdated6);
-        var updatedGameResult6 = _football.UpdateScore(updatedGame6);
+        var updatedGameResult6 = _liveGames.UpdateScore(updatedGame6);
 
-        var result = _football.AllSummary();
+        var result = _liveGames.AllSummary().ToList();
 
         AreEqual(result[0], updatedGame6);
         AreEqual(result[1], updatedGame5);
@@ -276,48 +190,53 @@ public class LiveScoreTests
 
     #endregion
 
+    #region EventTest
+
+
     [Test]
     public void OnGameStatusChangeProcessCompleted_StartGameEventWithValidGame_ExpectedTrue()
     {
-        _football.OnGameStatusChangeProcessCompleted += IsGameStatusChanged;
-        _football.StartGame(_game);
+        _gameController.OnGameStatusChangeProcessCompleted += IsGameStatusChanged;
+        _gameController.StartGame(_game);
 
     }
 
     [Test]
     public void OnGameStatusChangeProcessCompleted_StartGameEventWithInValidGame_ExpectedFailure()
     {
-        _football.OnGameStatusChangeProcessCompleted += IsGameStatusChanged2;
-        _football.StartGame(_game4);
+        _gameController.OnGameStatusChangeProcessCompleted += IsGameStatusChanged2;
+        _gameController.StartGame(_game4);
     }
 
 
     [Test]
     public void OnScoreChangeProcessCompleted_StartGameWithUpdateEventWithValidGame()
     {
-
         _eventScore = new Scores();
-        _football.OnLiveScoreChangeProcessCompleted += LiveScoreChanged;
-        _football.StartGame(_game);
-        _football.StartGame(_game2);
+        _liveGames.OnLiveScoreChangeProcessCompleted += LiveScoreChanged;
+        _gameController.StartGame(_game);
+        _gameController.StartGame(_game2);
 
         // update game2 
         var homeTeamUpdated = new Team("Manchester United", 2);
         var awayTeamUpdated = new Team("AC Milan", 0);
         var updatedGame = new Game(homeTeamUpdated, awayTeamUpdated);
         IsNotNull(_eventScore);
-        var updatedGameResult = _football.UpdateScore(updatedGame);
+        var updatedGameResult = _liveGames.UpdateScore(updatedGame);
         AreEqual(updatedGameResult.Score, _eventScore);
         AreEqual(homeTeamUpdated.Goal, _eventScore.Game.HomeTeam.Goal);
         // update game 1
         var homeTeamUpdated2 = new Team("Real Madrid", 1);
         var awayTeamUpdated2 = new Team("FC Barcelona", 0);
         var updatedGame2 = new Game(homeTeamUpdated2, awayTeamUpdated2);
-        var updatedGameResult2 = _football.UpdateScore(updatedGame2);
+        var updatedGameResult2 = _liveGames.UpdateScore(updatedGame2);
 
         AreEqual(updatedGameResult2.Score, _eventScore);
         AreEqual(homeTeamUpdated2.Goal, 1);
     }
+
+    #endregion
+
 
     private Scores _eventScore;
     private void LiveScoreChanged(object sender, ScoreEventArgs e) => _eventScore = e.UpdatedScore;
