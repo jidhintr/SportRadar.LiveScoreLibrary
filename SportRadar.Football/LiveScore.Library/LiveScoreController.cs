@@ -5,13 +5,13 @@ using LiveScore.Library.Utility;
 
 namespace LiveScore.Library;
 
-public class LiveGames : IGameAction
+public sealed class LiveScoreController : IGameAction
 {
     #region Props
-    public event EventHandler<ScoreEventArgs> OnLiveScoreChangeProcessCompleted;
+    public event EventHandler<ScoreEventArgs>? OnLiveScoreChangeProcessCompleted;
     #endregion
 
-    public LiveGames() => Globals.InternalScoreBoard = GameFactory.GetInternalScoreModelList();
+    public LiveScoreController() => Globals.InternalScoreBoard = GameFactory.GetInternalScoreModelList();
 
     #region Contracts
 
@@ -64,7 +64,7 @@ public class LiveGames : IGameAction
 
     #region LocalFunctions
     
-    protected virtual void ScoreUpdated(ScoreEventArgs args)
+    private void ScoreUpdated(ScoreEventArgs args)
     {
         OnLiveScoreChangeProcessCompleted?.Invoke(this, args);
     }

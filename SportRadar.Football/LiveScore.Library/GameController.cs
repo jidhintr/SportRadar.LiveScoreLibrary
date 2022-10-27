@@ -5,9 +5,9 @@ using System.Text;
 
 namespace LiveScore.Library;
 
-public class GameController : IControlGame
+public sealed class GameController : IControlGame
 {
-    public event EventHandler<bool> OnGameStatusChangeProcessCompleted;
+    public event EventHandler<bool>? OnGameStatusChangeProcessCompleted;
 
     public GameController() => Globals.InternalScoreBoard = GameFactory.GetInternalScoreModelList();
 
@@ -88,8 +88,6 @@ public class GameController : IControlGame
     }
 
     #endregion
-    protected virtual void OnGameStatusChanged(bool isSuccessful)
-    {
-        OnGameStatusChangeProcessCompleted?.Invoke(this, isSuccessful);
-    }
+
+    private void OnGameStatusChanged(bool isSuccessful) => OnGameStatusChangeProcessCompleted?.Invoke(this, isSuccessful);
 }
