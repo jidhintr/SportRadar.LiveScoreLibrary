@@ -1,4 +1,6 @@
 ﻿using LiveScore.Library.Models;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace LiveScore.Library.Utility;
 
@@ -12,11 +14,25 @@ public static class Helper
 
     internal static InternalScoreModel? IsGameLive(this Game game)
     {
-        return Globals.InternalScoreBoard.FirstOrDefault(match => match.IsLive &&
+        return Globals.InternalScoreBoard?.FirstOrDefault(match => match.IsLive &&
                                                                   match.AwayTeam.TeamName.Equals(game.AwayTeam.TeamName,
                                                                       StringComparison.OrdinalIgnoreCase)
                                                                   && match.HomeTeam.TeamName.Equals(
                                                                       game.HomeTeam.TeamName,
                                                                       StringComparison.OrdinalIgnoreCase));
+    }
+
+    internal static bool IsGameExists(string hash)
+    {
+        return Globals.InternalScoreBoard != null && Globals.InternalScoreBoard.Any(a => a.GameHash == hash);
+    }
+
+
+    public static string ComputeHash(this string content)
+    {
+        var contentBytes = Encoding.ASCII.GetBytes(content.ToLower());
+        using var md5 = MD5.Create();
+        var hash = md5.ComputeHash(contentBytes);
+        return  BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant();
     }
 }

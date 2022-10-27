@@ -27,15 +27,21 @@ public sealed class GameController : IControlGame
             var endTime = startTime.AddMinutes(90);
             var liveGames = Globals.InternalScoreBoard.Count;
             var gameId = liveGames + 1;
-
             // internal model for DB / data manipulation 
             var liveGame = GameFactory.GetInternalScoreModel();
+
+            var hash = $"{game.HomeTeam.TeamName}{game.AwayTeam.TeamName}".ComputeHash();
+            if (Helper.IsGameExists(hash))
+                return Invalidate(result);
+
+
             liveGame.GameId = gameId;
             liveGame.AwayTeam = game.AwayTeam;
             liveGame.HomeTeam = game.HomeTeam;
             liveGame.IsLive = true;
             liveGame.StartTime = startTime;
             liveGame.LastUpdatedOn = TimeOnly.FromDateTime(DateTime.Now);
+            liveGame.GameHash = hash;
             liveGame.Message = new StringBuilder(
                 $"Game between {game.AwayTeam} and {game.HomeTeam} started at {startTime} and expected to finish by {endTime}");
 
@@ -44,7 +50,7 @@ public sealed class GameController : IControlGame
 
             // TODO : Use automapper to map result => 
 
-            result.GameId = gameId;
+            result.GameId = hash ;
             result.IsLive = liveGame.IsLive;
             result.Game = game;
             result.Message = liveGame.Message.ToString();
@@ -62,6 +68,12 @@ public sealed class GameController : IControlGame
             // log ex
             throw;
         }
+    }
+
+    private (bool IsStarted, Scores Score) Invalidate(Scores? result)
+    {
+        OnGameStatusChanged(false);
+        return (false, result);
     }
 
     public bool FinishGame(Game game)

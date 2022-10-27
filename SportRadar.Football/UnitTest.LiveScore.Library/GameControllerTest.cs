@@ -46,17 +46,21 @@ public class GameControllerTest
     public void StartGame_ValidParams_ReturnsTrue()
     {
         var result = _gameController.StartGame(_game);
-        if (result.Score != null)
-            Assert.IsTrue(result.IsStarted);
+        if (result.IsStarted)
+        {
+            Assert.NotNull(result);
+            Assert.IsTrue(result.Score.IsLive);
+        }
     }
 
     [Test]
     [TestCase]
     public void StartGame_ValidParams_SingleGame_NullResponse()
     {
-        var result = _gameController.StartGame(_game);
-        if (result.Score == null)
+        var result = _gameController.StartGame(_game4);
+        if (!result.Score.IsLive)
             Assert.IsFalse(result.IsStarted);
+        Assert.IsFalse(result.IsStarted);
     }
 
     [Test]
@@ -64,22 +68,42 @@ public class GameControllerTest
     public void StartGame_ValidParams_MultipleGame()
     {
         var result = _gameController.StartGame(_game);
-        Assert.IsTrue(result.IsStarted);
+        if (result.IsStarted)
+        {
+            var result2 = _gameController.StartGame(_game2);
+            Assert.IsTrue(result2.Score.IsLive);
+            Assert.AreEqual(_game2, result2.Score.Game);
+            Assert.AreEqual(_game, result.Score.Game);
 
-        var result2 = _gameController.StartGame(_game2);
-        Assert.IsTrue(result2.IsStarted);
+        }
 
     }
+
+    [Test]
+    [TestCase]
+    public void StartGame_AddingSameGameTwice()
+    {
+        var result = _gameController.StartGame(_game);
+        Assert.IsTrue(result.IsStarted);
+
+        var result2 = _gameController.StartGame(_game);
+        Assert.IsFalse(result2.IsStarted);
+    }
+
+
 
     [Test]
     public void StartGame_ValidParams_MultipleGame_ScoreCheck()
     {
         var expected = new Team("Real Madrid", 0);
         var result = _gameController.StartGame(_game);
-        Assert.IsTrue(result.Score.IsLive);
-        Assert.GreaterOrEqual(result.Score.GameId, 1);
-        Assert.GreaterOrEqual(result.Score.Game.AwayTeam.Goal, 0);
-        Assert.That(result.Score.Game.HomeTeam, Is.EqualTo(expected));
+        if (result.IsStarted)
+        {
+            Assert.IsTrue(result.Score.IsLive);
+            Assert.AreEqual("55548638963f2ec7abc1f73656c26933",result.Score.GameId);
+            Assert.GreaterOrEqual(result.Score.Game.AwayTeam.Goal, 0);
+            Assert.That(result.Score.Game.HomeTeam, Is.EqualTo(expected));
+        }
     }
 
 
@@ -95,7 +119,8 @@ public class GameControllerTest
     public void StartGame_ValidParams_SingleGame_ToStringCheck()
     {
         var result = _gameController.StartGame(_game);
-        Assert.That(result.Score.ToString(), Is.EqualTo("Real Madrid 0 - FC Barcelona 0"));
+        if (result.IsStarted)
+            Assert.AreEqual("Real Madrid 0 - FC Barcelona 0", result.Score.ToString());
     }
     #endregion
 
@@ -127,7 +152,7 @@ public class GameControllerTest
         Assert.IsTrue(result2);
 
         var result3 = _gameController.FinishGame(_game4);
-        Assert.IsFalse( result3);
+        Assert.IsFalse(result3);
 
     }
 

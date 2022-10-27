@@ -26,7 +26,7 @@ public sealed class LiveScoreController : IGameAction
             playingTeam.HomeTeam = game.HomeTeam;
             playingTeam.Message?.Append(Environment.NewLine).Append($"Goal scored at {DateTime.Now}");
 
-            scoreBoard.GameId = playingTeam.GameId;
+            scoreBoard.GameId = playingTeam.GameHash;
             scoreBoard.IsLive = playingTeam.IsLive;
             scoreBoard.Game = new Game(playingTeam.HomeTeam, playingTeam.AwayTeam);
             scoreBoard.Message = playingTeam.Message?.ToString();

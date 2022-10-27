@@ -4,7 +4,7 @@ namespace LiveScore.Library.Abstracts;
 
 public interface IScore
 {
-    int GameId { get; set; }
+    string GameId { get; set; }
     Game Game { get; set; }
     bool IsLive { get; set; }
     string? Message { get; set; }

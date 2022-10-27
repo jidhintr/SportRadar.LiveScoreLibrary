@@ -14,5 +14,6 @@ public interface IInternalModel
     TimeOnly LastUpdatedOn { get; set; }
 
     bool IsLive { get; set; }
+    string GameHash { get; set; }
     StringBuilder? Message { get; set; }
 }

@@ -11,5 +11,6 @@ internal class InternalScoreModel : IInternalModel
     public TimeOnly StartTime { get; set; } // just focus only time, realistically  on 90 minutes match , not with dates
     public TimeOnly LastUpdatedOn { get; set; }
     public bool IsLive { get; set; }
+    public string GameHash { get; set; }
     public StringBuilder? Message { get; set; }
 }
