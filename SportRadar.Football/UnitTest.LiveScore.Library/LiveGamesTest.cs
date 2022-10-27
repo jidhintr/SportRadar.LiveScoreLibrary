@@ -177,14 +177,14 @@ public class LiveGamesTest
 
         var result = _liveScoreController.AllSummary().ToList();
 
-        AreEqual(result[0], updatedGame6);
-        AreEqual(result[1], updatedGame5);
-        AreEqual(result[2], updatedGame2);
-        AreEqual(result[3], updatedGame3);
-        AreEqual(result[4], updatedGame);
+        AreEqual(updatedGame6, result[0]);
+        AreEqual(updatedGame5, result[1]);
+        AreEqual(updatedGame2, result[2]);
+        AreEqual(updatedGame3, result[3]);
+        AreEqual(updatedGame, result[4]);
 
-        AreEqual(result[0].AwayTeam.Goal, 2);
-        AreEqual(result[0].HomeTeam.Goal, 2);
+        AreEqual(2, result[0].AwayTeam.Goal);
+        AreEqual(2, result[0].HomeTeam.Goal);
 
     }
 
