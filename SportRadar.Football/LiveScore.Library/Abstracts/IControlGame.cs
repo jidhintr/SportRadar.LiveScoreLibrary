@@ -17,4 +17,12 @@ public interface IControlGame
     /// <param name="game">Live game's details</param>
     /// <returns>Boolean, game stopped or not</returns>
     bool FinishGame(Game game);
+
+    /// <summary>
+    /// Finish game by passing the game-id 
+    /// </summary>
+    /// <param name="gameId">Same Id received as return type on StartGame function</param>
+    /// <returns>Boolean, game stopped or not</returns>
+    bool FinishGame(string gameId);
+
 }

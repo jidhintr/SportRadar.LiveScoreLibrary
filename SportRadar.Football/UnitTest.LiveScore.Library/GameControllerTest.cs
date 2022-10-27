@@ -84,10 +84,12 @@ public class GameControllerTest
     public void StartGame_AddingSameGameTwice()
     {
         var result = _gameController.StartGame(_game);
-        Assert.IsTrue(result.IsStarted);
-
-        var result2 = _gameController.StartGame(_game);
-        Assert.IsFalse(result2.IsStarted);
+        if (result.IsStarted)
+        {
+            Assert.IsTrue(result.Score.IsLive);
+            var result2 = _gameController.StartGame(_game);
+            Assert.IsFalse(result2.Score.IsLive);
+        }
     }
 
 
@@ -100,11 +102,32 @@ public class GameControllerTest
         if (result.IsStarted)
         {
             Assert.IsTrue(result.Score.IsLive);
-            Assert.AreEqual("55548638963f2ec7abc1f73656c26933",result.Score.GameId);
+            Assert.AreEqual("55548638963f2ec7abc1f73656c26933", result.Score.GameId);
             Assert.GreaterOrEqual(result.Score.Game.AwayTeam.Goal, 0);
             Assert.That(result.Score.Game.HomeTeam, Is.EqualTo(expected));
         }
     }
+
+    [Test]
+    public void FinishGame_RemoveByGameId()
+    {
+        var result = _gameController.StartGame(_game);
+        var gameId = result.Score.GameId;
+        var status = _gameController.FinishGame(gameId);
+        Assert.IsTrue(status);
+
+    }
+
+
+    [Test]
+    public void FinishGame_RemoveByGameId_InvalidGame_ExpectFailure()
+    {
+        var result = _gameController.StartGame(_game);
+        var gameId = "&^HELLO WORLD-*";
+        var status = _gameController.FinishGame(gameId);
+        Assert.False(status);
+    }
+
 
 
     [Test]

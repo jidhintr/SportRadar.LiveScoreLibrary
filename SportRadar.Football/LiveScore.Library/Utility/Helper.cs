@@ -22,17 +22,18 @@ public static class Helper
                                                                       StringComparison.OrdinalIgnoreCase));
     }
 
-    internal static bool IsGameExists(string hash)
+    internal static bool IsGameLive(string hash)
     {
-        return Globals.InternalScoreBoard != null && Globals.InternalScoreBoard.Any(a => a.GameHash == hash);
+        return Globals.InternalScoreBoard != null && Globals.InternalScoreBoard.Any(a => a.GameHash == hash 
+        && a.IsLive);
     }
-
+    
 
     public static string ComputeHash(this string content)
     {
         var contentBytes = Encoding.ASCII.GetBytes(content.ToLower());
         using var md5 = MD5.Create();
         var hash = md5.ComputeHash(contentBytes);
-        return  BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant();
+        return BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant();
     }
 }

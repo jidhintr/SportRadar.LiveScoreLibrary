@@ -31,7 +31,7 @@ public sealed class GameController : IControlGame
             var liveGame = GameFactory.GetInternalScoreModel();
 
             var hash = $"{game.HomeTeam.TeamName}{game.AwayTeam.TeamName}".ComputeHash();
-            if (Helper.IsGameExists(hash))
+            if (Helper.IsGameLive(hash))
                 return Invalidate(result);
 
 
@@ -50,7 +50,7 @@ public sealed class GameController : IControlGame
 
             // TODO : Use automapper to map result => 
 
-            result.GameId = hash ;
+            result.GameId = hash;
             result.IsLive = liveGame.IsLive;
             result.Game = game;
             result.Message = liveGame.Message.ToString();
@@ -82,14 +82,7 @@ public sealed class GameController : IControlGame
         {
             var playingGame = game.IsGameLive();
             // notify the summary model
-            if (playingGame != null)
-            {
-                Globals.InternalScoreBoard.Remove(playingGame);
-                OnGameStatusChanged(true);
-                return true;
-            }
-            OnGameStatusChanged(false);
-            return false;
+            return RemoveGame(playingGame);
         }
         catch (Exception ex)
         {
@@ -98,8 +91,30 @@ public sealed class GameController : IControlGame
         }
 
     }
-
+    public bool FinishGame(string gameId)
+    {
+        var game = Globals.InternalScoreBoard.FirstOrDefault(a => a.GameHash == gameId);
+        return RemoveGame(game);
+    }
+    
     #endregion
 
-    private void OnGameStatusChanged(bool isSuccessful) => OnGameStatusChangeProcessCompleted?.Invoke(this, isSuccessful);
+
+    #region Local Functions
+
+    private bool RemoveGame(InternalScoreModel? playingGame)
+    {
+        if (playingGame != null)
+        {
+            Globals.InternalScoreBoard.Remove(playingGame);
+            OnGameStatusChanged(true);
+            return true;
+        }
+
+        OnGameStatusChanged(false);
+        return false;
+    }
+    
+    private void OnGameStatusChanged(bool isSuccessful) => OnGameStatusChangeProcessCompleted?.Invoke(this, isSuccessful); 
+    #endregion
 }
