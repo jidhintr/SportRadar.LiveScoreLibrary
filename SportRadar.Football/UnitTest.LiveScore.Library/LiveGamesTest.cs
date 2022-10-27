@@ -73,7 +73,7 @@ public class LiveGamesTest
 
     #endregion
 
- 
+
     #region UpdateGAmeTests
 
     [Test]
@@ -223,22 +223,22 @@ public class LiveGamesTest
         var updatedGame = new Game(homeTeamUpdated, awayTeamUpdated);
         IsNotNull(_eventScore);
         var updatedGameResult = _liveScoreController.UpdateScore(updatedGame);
-        AreEqual(updatedGameResult.Score, _eventScore);
-        AreEqual(homeTeamUpdated.Goal, _eventScore.Game.HomeTeam.Goal);
+        AreEqual(_eventScore, updatedGameResult.Score);
+        AreEqual(_eventScore.Game.HomeTeam.Goal, homeTeamUpdated.Goal);
         // update game 1
         var homeTeamUpdated2 = new Team("Real Madrid", 1);
         var awayTeamUpdated2 = new Team("FC Barcelona", 0);
         var updatedGame2 = new Game(homeTeamUpdated2, awayTeamUpdated2);
         var updatedGameResult2 = _liveScoreController.UpdateScore(updatedGame2);
 
-        AreEqual(updatedGameResult2.Score, _eventScore);
-        AreEqual(homeTeamUpdated2.Goal, 1);
+        AreEqual(_eventScore, updatedGameResult2.Score);
+        AreEqual(1, homeTeamUpdated2.Goal);
     }
 
     #endregion
 
 
-    private Scores _eventScore;
+    private Scores? _eventScore;
     private void LiveScoreChanged(object sender, ScoreEventArgs e) => _eventScore = e.UpdatedScore;
 
 
