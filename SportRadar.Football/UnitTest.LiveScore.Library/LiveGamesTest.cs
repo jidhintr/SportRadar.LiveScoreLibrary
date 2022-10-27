@@ -1,5 +1,3 @@
-using System.Diagnostics;
-using System.Xml.Linq;
 using LiveScore.Library;
 using LiveScore.Library.Events;
 using LiveScore.Library.Models;
@@ -175,7 +173,7 @@ public class LiveGamesTest
         var updatedGame6 = new Game(homeTeamUpdated6, awayTeamUpdated6);
         var updatedGameResult6 = _liveScoreController.UpdateScore(updatedGame6);
 
-        var result = _liveScoreController.AllSummary().ToList();
+        var result = _liveScoreController.Summary().ToList();
 
         AreEqual(updatedGame6, result[0]);
         AreEqual(updatedGame5, result[1]);

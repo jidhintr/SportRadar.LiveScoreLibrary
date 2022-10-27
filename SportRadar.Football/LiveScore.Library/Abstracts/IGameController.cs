@@ -2,7 +2,7 @@
 
 namespace LiveScore.Library.Abstracts;
 
-public interface IControlGame
+public interface IGameController
 {
     /// <summary>
     ///     Start the game, it add the live score to the scoreboard

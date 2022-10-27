@@ -2,7 +2,7 @@
 
 namespace LiveScore.Library.Abstracts;
 
-public interface IGameAction
+public interface IScoreController
 {
     /// <summary>
     ///     Update score of all live games
@@ -15,7 +15,7 @@ public interface IGameAction
     /// Get list of all live games 
     /// </summary>
     /// <returns>IEnumerable of all games in order</returns>
-    IEnumerable< Game> AllSummary(); // sort action ??
+    IEnumerable< Game> Summary();  
     
 
 }

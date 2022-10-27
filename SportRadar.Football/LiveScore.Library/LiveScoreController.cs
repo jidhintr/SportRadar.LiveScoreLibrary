@@ -5,7 +5,7 @@ using LiveScore.Library.Utility;
 
 namespace LiveScore.Library;
 
-public sealed class LiveScoreController : IGameAction
+public sealed class LiveScoreController : IScoreController
 {
     #region Props
     public event EventHandler<ScoreEventArgs>? OnLiveScoreChangeProcessCompleted;
@@ -41,7 +41,7 @@ public sealed class LiveScoreController : IGameAction
         }
     }
 
-    public IEnumerable<Game> AllSummary()
+    public IEnumerable<Game> Summary()
     {
         var liveGames = (from game in Globals.InternalScoreBoard
                          let g1 = game.AwayTeam.Goal

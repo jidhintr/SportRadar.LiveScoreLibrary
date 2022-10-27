@@ -5,7 +5,7 @@ using System.Text;
 
 namespace LiveScore.Library;
 
-public sealed class GameController : IControlGame
+public sealed class GameController : IGameController
 {
     public event EventHandler<bool>? OnGameStatusChangeProcessCompleted;
 
